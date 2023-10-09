@@ -1,0 +1,86 @@
+import tkinter as tk
+import requests
+import json
+from datetime import datetime
+
+# Initialize Window
+root = tk.Tk()
+root.geometry("400x400")
+root.resizable(0, 0)
+root.title("Weather App - Custom Design")
+
+# Create Frames
+input_frame = tk.Frame(root, bg="lightblue", pady=10)
+output_frame = tk.Frame(root, bg="lightblue")
+
+# Functions to fetch and display weather info
+city_value = tk.StringVar()
+def time_format_for_location(utc_with_tz):
+    local_time = datetime.utcfromtimestamp(utc_with_tz)
+    return local_time.time()
+def showWeather():
+    # Enter your API key, copied from the OpenWeatherMap dashboard
+    api_key = "538db9413e5f6f80543622c0cb44a69c"
+
+    # Get city name from the user from the input field
+    city_name = city_value.get()
+
+    # API url
+    weather_url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city_name + '&appid=' + api_key
+
+    # Get the response from the fetched URL
+    response = requests.get(weather_url)
+
+    # Change response from JSON to Python-readable
+    weather_info = response.json()
+
+    tfield.delete("1.0", "end")
+
+    # As per API documentation, if the code is 200, it means that weather data was successfully fetched
+    if weather_info['cod'] == 200:
+        kelvin = 273
+
+        # Storing the fetched values of weather of a city
+        temp = int(weather_info['main']['temp'] - kelvin)
+        feels_like_temp = int(weather_info['main']['feels_like'] - kelvin)
+        pressure = weather_info['main']['pressure']
+        humidity = weather_info['main']['humidity']
+        wind_speed = weather_info['wind']['speed'] * 3.6
+        sunrise = weather_info['sys']['sunrise']
+        sunset = weather_info['sys']['sunset']
+        timezone = weather_info['timezone']
+        cloudy = weather_info['clouds']['all']
+        description = weather_info['weather'][0]['description']
+
+        sunrise_time = time_format_for_location(sunrise + timezone)
+        sunset_time = time_format_for_location(sunset + timezone)
+
+        # Assigning values to our weather variable to display as output
+        weather = f"\nWeather of: {city_name}\nTemperature (Celsius): {temp}°\nFeels like in (Celsius): {feels_like_temp}°\nPressure: {pressure} hPa\nHumidity: {humidity}%\nSunrise at {sunrise_time} and Sunset at {sunset_time}\nCloud: {cloudy}%\nInfo: {description}"
+    else:
+        weather = f"\n\tWeather for '{city_name}' not found!\n\tKindly Enter a valid City Name !!"
+
+    tfield.insert("1.0", weather)
+
+# Frontend part of code - Interface
+city_head = tk.Label(input_frame, text='Enter City Name', font='Arial 12 bold', bg="lightblue")
+city_head.pack()
+
+inp_city = tk.Entry(input_frame, textvariable=city_value, width=24, font='Arial 14 bold')
+inp_city.pack()
+
+check_button = tk.Button(input_frame, command=showWeather, text="Check Weather", font="Arial 10", bg='lightblue', fg='black', activebackground="teal", padx=5, pady=5)
+check_button.pack(pady=10)
+
+# Pack Frames
+input_frame.pack()
+output_frame.pack()
+
+# Output Text Field
+weather_now = tk.Label(output_frame, text="The Weather is:", font='arial 12 bold', bg="lightblue")
+weather_now.pack(pady=10)
+
+tfield = tk.Text(output_frame, width=46, height=10, bg="skyblue")
+tfield.pack()
+
+root.mainloop()
